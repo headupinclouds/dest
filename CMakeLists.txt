@@ -12,7 +12,7 @@ endif()
 set(DEST_LINK_TARGETS)
 
 set(DEST_EIGEN_DIR "../eigen" CACHE PATH "Where is the include directory of Eigen located")
-set(DEST_WITH_OPENCV OFF CACHE BOOL "Build DEST with OpenCV support")
+option(DEST_WITH_OPENCV "Build DEST with OpenCV support" ON)
 if(DEST_WITH_OPENCV)
 	if (WIN32)
     	set(OpenCV_STATIC OFF)
@@ -26,7 +26,7 @@ else()
     message(STATUS "Compiling without OpenCV support")
 endif()
 
-set(DEST_WITH_OPENMP OFF CACHE BOOL "Build DEST with OpenMP support")
+option(DEST_WITH_OPENMP "Build DEST with OpenMP support" OFF)
 if(DEST_WITH_OPENMP)
     find_package(OpenMP)
     if (OPENMP_FOUND)
@@ -43,7 +43,7 @@ endif()
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc" "ext")
 
 # Library
-set(DEST_VERBOSE ON CACHE BOOL "Build DEST in verbose mode.")
+option(DEST_VERBOSE "Build DEST in verbose mode." ON)
 configure_file(inc/dest/core/config.h.in dest/core/config.h)
 add_library(dest
     inc/dest/dest.h
@@ -82,7 +82,7 @@ add_library(dest
     src/util/triangulate.cpp
 )
 	
-target_link_libraries(dest ${DEST_LINK_TARGETS})
+target_link_libraries(dest ${DEST_LINK_TARGETS} Eigen::eigen)
 	
 # Samples
 
