@@ -11,6 +11,7 @@
 #include <dest/core/tester.h>
 #include <dest/util/log.h>
 #include <numeric>
+#include <iostream>
 
 namespace dest {
     namespace core {
