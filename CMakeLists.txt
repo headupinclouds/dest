@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+# TODO: add full hunter suport (WIP)
+
 project(deformable-shape-tracking)
 
 if (WIN32)
