@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.0)
 include("cmake/HunterGate.cmake")
 
 ## This is synonmous with building the examples, off by default for package builds
+option(DEST_BUILD_EXAMPLES "Build DEST examples." OFF)
 option(DEST_WITH_OPENCV "Build DEST with OpenCV support." OFF)
 
 set(HUNTER_DEST_URL "https://github.com/ruslo/hunter/archive/v0.14.19.tar.gz")
@@ -40,6 +41,10 @@ option(DEST_BUILD_TESTS "Build tests." OFF)
 hunter_add_package(Eigen)
 find_package(Eigen REQUIRED)
 
+### flatbuffers (header only)
+hunter_add_package(flatbuffers)
+find_package(flatbuffers CONFIG REQUIRED)
+
 ### OpenCV
 if(DEST_WITH_OPENCV)
 
@@ -68,52 +73,61 @@ else()
     message(STATUS "Compiling without OpenMP support")
 endif()
 
-include_directories("${CMAKE_CURRENT_BINARY_DIR}" "inc" "ext")
+#include_directories("${CMAKE_CURRENT_BINARY_DIR}" "inc" "ext")
+
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" "inc" )
 
 # Library
 option(DEST_VERBOSE "Build DEST in verbose mode." OFF)
 configure_file(inc/dest/core/config.h.in dest/core/config.h)
-add_library(dest
-    inc/dest/dest.h
-    ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
-    inc/dest/core/shape.h
-    inc/dest/core/image.h
-    inc/dest/core/training_data.h
-    inc/dest/core/tracker.h
-    inc/dest/core/regressor.h
-    inc/dest/core/tree.h
-    inc/dest/core/tester.h
+
+set(DEST_SOURCES
+  ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
+  inc/dest/dest.h  
+  inc/dest/io/dest_io.fbs
+  inc/dest/io/dest_io_generated.h
+  inc/dest/io/rect_io.h  
+  inc/dest/core/image.h
+  inc/dest/core/regressor.h
+  inc/dest/core/shape.h
+  inc/dest/core/tracker.h
+  inc/dest/core/tree.h
+  inc/dest/io/database_io.h    
+  inc/dest/io/matrix_io.h
+  inc/dest/util/log.h
+  src/core/image.cpp
+  src/core/regressor.cpp
+  src/core/shape.cpp
+  src/core/tracker.cpp
+  src/core/tree.cpp
+  src/io/database_io.cpp
+  )
+
+if(DEST_WITH_OPENCV)
+  # These files are only required for 
+  list(APPEND DEST_SOURCES
+    inc/dest/core/tester.h  
+    inc/dest/core/training_data.h  
     inc/dest/face/face_detector.h
-    inc/dest/io/database_io.h
-    inc/dest/io/dest_io.fbs
-    inc/dest/io/dest_io_generated.h
-    inc/dest/io/matrix_io.h
-    inc/dest/io/rect_io.h
-    inc/dest/util/draw.h
-    inc/dest/util/log.h
     inc/dest/util/convert.h
-    inc/dest/util/glob.h
-    inc/dest/util/triangulate.h
-    src/core/shape.cpp
-    src/core/image.cpp
+    inc/dest/util/draw.h    
+    inc/dest/util/glob.h    
+    inc/dest/util/triangulate.h  
+    src/core/tester.cpp    
     src/core/training_data.cpp
-    src/core/tracker.cpp
-    src/core/regressor.cpp
-    src/core/tree.cpp
-    src/core/tester.cpp
+    src/face/face_detector.cpp    
     src/io/rect_io.cpp
-    src/io/database_io.cpp   
-    src/face/face_detector.cpp
     src/util/draw.cpp
     src/util/glob.cpp
     src/util/triangulate.cpp
-)
+    )
+endif(DEST_WITH_OPENCV)
 	
-target_link_libraries(dest ${DEST_LINK_TARGETS} Eigen::eigen)
+add_library(dest ${DEST_SOURCES})
+target_link_libraries(dest ${DEST_LINK_TARGETS} Eigen::eigen flatbuffers::flatbuffers)
 	
 # Samples
-
-if(DEST_WITH_OPENCV)
+if(DEST_WITH_OPENCV AND DEST_BUILD_EXAMPLES)
     add_executable(dest_gen_rects examples/dest_gen_rects.cpp)
     target_link_libraries(dest_gen_rects dest ${DEST_LINK_TARGETS})
 
