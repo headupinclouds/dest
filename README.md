@@ -1,7 +1,6 @@
 TRAVIS: [![Build Status](https://travis-ci.org/headupinclouds/dest.svg?branch=hunter)](https://travis-ci.org/headupinclouds/dest)
 APPVEYOR: [![Build status](https://ci.appveyor.com/api/projects/status/w59wb93capdppawk?svg=true)](https://ci.appveyor.com/project/headupinclouds/dest)
 
-
 ## About this library
 
 **Deformable Shape Tracking (DEST)** is a C++ library providing high performance 2D shape tracking leveraging
