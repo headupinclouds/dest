@@ -3,11 +3,25 @@ cmake_minimum_required(VERSION 3.0)
 ### Hunter snapshot that will be used ###
 include("cmake/HunterGate.cmake")
 
-#TODO: Need to update hunter, use local HUNTER_ROOT for initial testing
-HunterGate(
-    URL "https://github.com/ruslo/hunter/archive/v0.14.19.tar.gz" 
-    SHA1 "ab886ddc6be6870a403224ee8f587e640827b1d9"
-)
+## This is synonmous with building the examples, off by default for package builds
+option(DEST_WITH_OPENCV "Build DEST with OpenCV support." OFF)
+
+set(HUNTER_DEST_URL "https://github.com/ruslo/hunter/archive/v0.14.19.tar.gz")
+set(HUNTER_DEST_SHA1 "ab886ddc6be6870a403224ee8f587e640827b1d9")
+
+if(DEST_WITH_OPENCV)
+  HunterGate(
+    URL "${HUNTER_DEST_URL}"
+    SHA1 "${HUNTER_DEST_SHA1}"
+    LOCAL # Disable some opencv functionality for sample apps as workaround for build errors
+    )
+else()
+  # Lib only builds don't need a LOCAL config
+  HunterGate(
+    URL "${HUNTER_DEST_URL}"
+    SHA1 "${HUNTER_DEST_SHA1}"    
+    )
+endif()
 
 project(deformable-shape-tracking VERSION 0.8.0)
 
@@ -20,8 +34,6 @@ endif()
 
 set(DEST_LINK_TARGETS)
 
-## This is synonmous with building the examples, off by default for package builds
-option(DEST_WITH_OPENCV "Build DEST with OpenCV support." OFF)
 option(DEST_BUILD_TESTS "Build tests." OFF)
 
 ### Eigen3 (Header only)
@@ -39,7 +51,7 @@ if(DEST_WITH_OPENCV)
   message(STATUS "Compiling with OpenCV support")
   
 else()
-    message(STATUS "Compiling without OpenCV support")
+  message(STATUS "Compiling without OpenCV support")
 endif()
 
 option(DEST_WITH_OPENMP "Build DEST with OpenMP support" OFF)
@@ -59,7 +71,7 @@ endif()
 include_directories("${CMAKE_CURRENT_BINARY_DIR}" "inc" "ext")
 
 # Library
-option(DEST_VERBOSE "Build DEST in verbose mode." ON)
+option(DEST_VERBOSE "Build DEST in verbose mode." OFF)
 configure_file(inc/dest/core/config.h.in dest/core/config.h)
 add_library(dest
     inc/dest/dest.h
@@ -140,20 +152,20 @@ if(DEST_BUILD_TESTS)
     tests/test_rect_io.cpp
     )
   target_link_libraries(dest_tests dest ${DEST_LINK_TARGETS})
-endif(DEST_BIULD_TESTS)
+endif(DEST_BUILD_TESTS)
 
 ## install
 
-set(config_install_dir "lib/cmake/${PROJECT_NAME}")
+set(config_install_dir "lib/cmake/dest")
 set(include_install_dir "include")
 
 set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 # Configuration
-set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
-set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
-set(targets_export_name "${PROJECT_NAME}Targets")
-set(namespace "${PROJECT_NAME}::")
+set(version_config "${generated_dir}/destConfigVersion.cmake")
+set(project_config "${generated_dir}/destConfig.cmake")
+set(targets_export_name "destTargets")
+set(namespace "dest::")
 
 include(CMakePackageConfigHelpers)
 
@@ -178,7 +190,7 @@ install(
 
 install(
   DIRECTORY inc/dest/ # Trailing slash is required
-  DESTINATION "${include_install_dir}/${PROJECT_NAME}"
+  DESTINATION "${include_install_dir}/dest"
   FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.h.in"
   )
 
