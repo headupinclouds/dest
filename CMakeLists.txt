@@ -75,7 +75,6 @@ option(DEST_VERBOSE "Build DEST in verbose mode." OFF)
 configure_file(inc/dest/core/config.h.in dest/core/config.h)
 add_library(dest
     inc/dest/dest.h
-    inc/dest/core/config.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
     inc/dest/core/shape.h
     inc/dest/core/image.h
@@ -188,10 +187,18 @@ install(
   INCLUDES DESTINATION "${include_install_dir}"
   )
 
+configure_file(inc/dest/core/config.h.in "${include_install_dir}/dest/core/config.h")
+
 install(
   DIRECTORY inc/dest/ # Trailing slash is required
   DESTINATION "${include_install_dir}/dest"
-  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.h.in"
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
+  )
+
+## install runtime generated file
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h"
+  DESTINATION "${include_install_dir}/dest/core/"
   )
 
 install(
