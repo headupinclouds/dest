@@ -1,29 +1,43 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
-# TODO: add full hunter suport (WIP)
+### Hunter snapshot that will be used ###
+include("cmake/HunterGate.cmake")
 
-project(deformable-shape-tracking)
+#TODO: Need to update hunter, use local HUNTER_ROOT for initial testing
+HunterGate(
+    URL "https://github.com/ruslo/hunter/archive/v0.14.19.tar.gz" 
+    SHA1 "ab886ddc6be6870a403224ee8f587e640827b1d9"
+)
+
+project(deformable-shape-tracking VERSION 0.8.0)
 
 if (WIN32)
-	add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS")
+  add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 endif()
 
 set(DEST_LINK_TARGETS)
 
-set(DEST_EIGEN_DIR "../eigen" CACHE PATH "Where is the include directory of Eigen located")
-option(DEST_WITH_OPENCV "Build DEST with OpenCV support" ON)
+## This is synonmous with building the examples, off by default for package builds
+option(DEST_WITH_OPENCV "Build DEST with OpenCV support." OFF)
+option(DEST_BUILD_TESTS "Build tests." OFF)
+
+### Eigen3 (Header only)
+hunter_add_package(Eigen)
+find_package(Eigen REQUIRED)
+
+### OpenCV
 if(DEST_WITH_OPENCV)
-	if (WIN32)
-    	set(OpenCV_STATIC OFF)
-		set(OpenCV_SHARED ON)
-	endif()
-	find_package(OpenCV REQUIRED)
-	include_directories(${OpenCV_INCLUDE_DIRS})
-	list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
-    message(STATUS "Compiling with OpenCV support")
+
+  hunter_add_package(OpenCV)
+  find_package(OpenCV REQUIRED)
+
+  include_directories(${OpenCV_INCLUDE_DIRS})
+  list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
+  message(STATUS "Compiling with OpenCV support")
+  
 else()
     message(STATUS "Compiling without OpenCV support")
 endif()
@@ -42,7 +56,7 @@ else()
     message(STATUS "Compiling without OpenMP support")
 endif()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${DEST_EIGEN_DIR} "inc" "ext")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" "inc" "ext")
 
 # Library
 option(DEST_VERBOSE "Build DEST in verbose mode." ON)
@@ -115,15 +129,66 @@ if(DEST_WITH_OPENCV)
 
 endif()
 
-
 # Tests
-
-add_executable(dest_tests
+if(DEST_BUILD_TESTS)
+  add_executable(dest_tests
     tests/catch.hpp
     tests/test_transform.cpp
     tests/test_image.cpp
     tests/test_shape.cpp
     tests/test_matrix_io.cpp
     tests/test_rect_io.cpp
-)
-target_link_libraries(dest_tests dest ${DEST_LINK_TARGETS})
+    )
+  target_link_libraries(dest_tests dest ${DEST_LINK_TARGETS})
+endif(DEST_BIULD_TESTS)
+
+## install
+
+set(config_install_dir "lib/cmake/${PROJECT_NAME}")
+set(include_install_dir "include")
+
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+# Configuration
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(targets_export_name "${PROJECT_NAME}Targets")
+set(namespace "${PROJECT_NAME}::")
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+  "${version_config}" COMPATIBILITY SameMajorVersion
+  )
+
+configure_package_config_file(
+  "cmake/Config.cmake.in"
+  "${project_config}"
+  INSTALL_DESTINATION "${config_install_dir}"
+  )
+
+install(
+  TARGETS dest
+  EXPORT "${targets_export_name}"
+  LIBRARY DESTINATION "lib"
+  ARCHIVE DESTINATION "lib"
+  RUNTIME DESTINATION "bin"
+  INCLUDES DESTINATION "${include_install_dir}"
+  )
+
+install(
+  DIRECTORY inc/dest/ # Trailing slash is required
+  DESTINATION "${include_install_dir}/${PROJECT_NAME}"
+  FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.h.in"
+  )
+
+install(
+  FILES "${project_config}" "${version_config}"
+  DESTINATION "${config_install_dir}"
+  )
+
+install(
+  EXPORT "${targets_export_name}"
+  NAMESPACE "${namespace}"
+  DESTINATION "${config_install_dir}"
+  )
