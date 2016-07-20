@@ -20,7 +20,7 @@ else()
   # Lib only builds don't need a LOCAL config
   HunterGate(
     URL "${HUNTER_DEST_URL}"
-    SHA1 "${HUNTER_DEST_SHA1}"    
+    SHA1 "${HUNTER_DEST_SHA1}"
     )
 endif()
 
@@ -54,7 +54,7 @@ if(DEST_WITH_OPENCV)
   include_directories(${OpenCV_INCLUDE_DIRS})
   list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
   message(STATUS "Compiling with OpenCV support")
-  
+
 else()
   message(STATUS "Compiling without OpenCV support")
 endif()
@@ -83,16 +83,16 @@ configure_file(inc/dest/core/config.h.in dest/core/config.h)
 
 set(DEST_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
-  inc/dest/dest.h  
+  inc/dest/dest.h
   inc/dest/io/dest_io.fbs
   inc/dest/io/dest_io_generated.h
-  inc/dest/io/rect_io.h  
+  inc/dest/io/rect_io.h
   inc/dest/core/image.h
   inc/dest/core/regressor.h
   inc/dest/core/shape.h
   inc/dest/core/tracker.h
   inc/dest/core/tree.h
-  inc/dest/io/database_io.h    
+  inc/dest/io/database_io.h
   inc/dest/io/matrix_io.h
   inc/dest/util/log.h
   src/core/image.cpp
@@ -104,28 +104,28 @@ set(DEST_SOURCES
   )
 
 if(DEST_WITH_OPENCV)
-  # These files are only required for 
+  # These files are only required for
   list(APPEND DEST_SOURCES
-    inc/dest/core/tester.h  
-    inc/dest/core/training_data.h  
+    inc/dest/core/tester.h
+    inc/dest/core/training_data.h
     inc/dest/face/face_detector.h
     inc/dest/util/convert.h
-    inc/dest/util/draw.h    
-    inc/dest/util/glob.h    
-    inc/dest/util/triangulate.h  
-    src/core/tester.cpp    
+    inc/dest/util/draw.h
+    inc/dest/util/glob.h
+    inc/dest/util/triangulate.h
+    src/core/tester.cpp
     src/core/training_data.cpp
-    src/face/face_detector.cpp    
+    src/face/face_detector.cpp
     src/io/rect_io.cpp
     src/util/draw.cpp
     src/util/glob.cpp
     src/util/triangulate.cpp
     )
 endif(DEST_WITH_OPENCV)
-	
+
 add_library(dest ${DEST_SOURCES})
 target_link_libraries(dest ${DEST_LINK_TARGETS} Eigen::eigen flatbuffers::flatbuffers)
-	
+
 # Samples
 if(DEST_WITH_OPENCV AND DEST_BUILD_EXAMPLES)
     add_executable(dest_gen_rects examples/dest_gen_rects.cpp)
