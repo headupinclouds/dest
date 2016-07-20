@@ -124,7 +124,7 @@ if(DEST_WITH_OPENCV)
 endif(DEST_WITH_OPENCV)
 
 add_library(dest ${DEST_SOURCES})
-target_link_libraries(dest ${DEST_LINK_TARGETS} Eigen::eigen flatbuffers::flatbuffers)
+target_link_libraries(dest PUBLIC ${DEST_LINK_TARGETS} Eigen::eigen flatbuffers::flatbuffers)
 
 # Samples
 if(DEST_WITH_OPENCV AND DEST_BUILD_EXAMPLES)
