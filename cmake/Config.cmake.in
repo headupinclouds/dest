@@ -1,10 +1,11 @@
 @PACKAGE_INIT@
 
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
 
 if(@DEST_WITH_OPENCV@)
   find_package(OpenCV REQUIRED)
+  find_package(tinydir CONFIG REQUIRED)
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/@targets_export_name@.cmake")

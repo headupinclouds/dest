@@ -22,7 +22,7 @@ set(OPENCV_CMAKE_ARGS
   WITH_PTHREADS_PF=OFF    # "Use pthreads-based parallel_for"
   WITH_TBB=OFF            # "Include Intel TBB support"
   WITH_1394=OFF           # "Include IEEE1394 support"
-  WITH_AVFOUNDATION=OFF   # "Use AVFoundation for Video I/O"
+  WITH_AVFOUNDATION=ON    # "Use AVFoundation for Video I/O"
   WITH_CARBON=OFF         # "Use Carbon for UI instead of Cocoa"
   WITH_VTK=OFF            # "Include VTK library support (and build opencv_viz module eiher)"
   WITH_CUDA=OFF           # "Include NVidia Cuda Runtime support"
@@ -66,6 +66,13 @@ set(OPENCV_CMAKE_ARGS
   WITH_IPP_A=OFF          # "Include Intel IPP_A support"
   WITH_GDAL=OFF           # "Include GDAL Support"
   WITH_GPHOTO2=OFF        # "Include gPhoto2 library support"
+
+  WITH_QTKIT=OFF
   )
 
-hunter_config(OpenCV VERSION ${HUNTER_OpenCV_VERSION} CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
+if(APPLE)
+  # Fixes #include <QTKit/QTKit.h> failure on >= OS X 10.12
+  hunter_config(OpenCV VERSION 3.0.0-p11 CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
+else()
+  hunter_config(OpenCV VERSION ${HUNTER_OpenCV_VERSION} CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
+endif()
