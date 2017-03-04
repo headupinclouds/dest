@@ -7,8 +7,8 @@ include("cmake/HunterGate.cmake")
 option(DEST_BUILD_EXAMPLES "Build DEST examples." OFF)
 option(DEST_WITH_OPENCV "Build DEST with OpenCV support." OFF)
 
-set(HUNTER_DEST_URL "https://github.com/ruslo/hunter/archive/v0.14.19.tar.gz")
-set(HUNTER_DEST_SHA1 "ab886ddc6be6870a403224ee8f587e640827b1d9")
+set(HUNTER_DEST_URL "https://github.com/ruslo/hunter/archive/v0.18.9.tar.gz")
+set(HUNTER_DEST_SHA1 "90bf10e2895531145332a8963725a351d7345c58")
 
 if(DEST_WITH_OPENCV)
   HunterGate(
@@ -20,18 +20,11 @@ else()
   # Lib only builds don't need a LOCAL config
   HunterGate(
     URL "${HUNTER_DEST_URL}"
-    SHA1 "${HUNTER_DEST_SHA1}"    
+    SHA1 "${HUNTER_DEST_SHA1}"
     )
 endif()
 
 project(deformable-shape-tracking VERSION 0.8.0)
-
-if (WIN32)
-  add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS")
-else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-endif()
 
 set(DEST_LINK_TARGETS)
 
@@ -39,7 +32,7 @@ option(DEST_BUILD_TESTS "Build tests." OFF)
 
 ### Eigen3 (Header only)
 hunter_add_package(Eigen)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 ### flatbuffers (header only)
 hunter_add_package(flatbuffers)
@@ -54,7 +47,11 @@ if(DEST_WITH_OPENCV)
   include_directories(${OpenCV_INCLUDE_DIRS})
   list(APPEND DEST_LINK_TARGETS ${OpenCV_LIBRARIES})
   message(STATUS "Compiling with OpenCV support")
-  
+
+  hunter_add_package(tinydir)
+  find_package(tinydir REQUIRED)
+  list(APPEND DEST_LINK_TARGETS tinydir::tinydir)
+
 else()
   message(STATUS "Compiling without OpenCV support")
 endif()
@@ -83,16 +80,16 @@ configure_file(inc/dest/core/config.h.in dest/core/config.h)
 
 set(DEST_SOURCES
   ${CMAKE_CURRENT_BINARY_DIR}/dest/core/config.h
-  inc/dest/dest.h  
+  inc/dest/dest.h
   inc/dest/io/dest_io.fbs
   inc/dest/io/dest_io_generated.h
-  inc/dest/io/rect_io.h  
+  inc/dest/io/rect_io.h
   inc/dest/core/image.h
   inc/dest/core/regressor.h
   inc/dest/core/shape.h
   inc/dest/core/tracker.h
   inc/dest/core/tree.h
-  inc/dest/io/database_io.h    
+  inc/dest/io/database_io.h
   inc/dest/io/matrix_io.h
   inc/dest/util/log.h
   src/core/image.cpp
@@ -104,28 +101,38 @@ set(DEST_SOURCES
   )
 
 if(DEST_WITH_OPENCV)
-  # These files are only required for 
+  # These files are only required for
   list(APPEND DEST_SOURCES
-    inc/dest/core/tester.h  
-    inc/dest/core/training_data.h  
+    inc/dest/core/tester.h
+    inc/dest/core/training_data.h
     inc/dest/face/face_detector.h
     inc/dest/util/convert.h
-    inc/dest/util/draw.h    
-    inc/dest/util/glob.h    
-    inc/dest/util/triangulate.h  
-    src/core/tester.cpp    
+    inc/dest/util/draw.h
+    inc/dest/util/glob.h
+    inc/dest/util/triangulate.h
+    src/core/tester.cpp
     src/core/training_data.cpp
-    src/face/face_detector.cpp    
+    src/face/face_detector.cpp
     src/io/rect_io.cpp
     src/util/draw.cpp
     src/util/glob.cpp
     src/util/triangulate.cpp
     )
 endif(DEST_WITH_OPENCV)
-	
+
 add_library(dest ${DEST_SOURCES})
-target_link_libraries(dest ${DEST_LINK_TARGETS} Eigen::eigen flatbuffers::flatbuffers)
-	
+target_link_libraries(dest PUBLIC ${DEST_LINK_TARGETS} Eigen3::Eigen flatbuffers::flatbuffers)
+
+if(HUNTER_ENABLED AND DEST_WITH_OPENCV)
+  target_compile_definitions(dest PRIVATE DEST_INTERNAL_TINYDIR=0)
+else()
+  target_compile_definitions(dest PRIVATE DEST_INTERNAL_TINYDIR=1)
+endif()
+
+if (WIN32)
+  target_compile_definitions(dest PUBLIC _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS)
+endif()
+
 # Samples
 if(DEST_WITH_OPENCV AND DEST_BUILD_EXAMPLES)
     add_executable(dest_gen_rects examples/dest_gen_rects.cpp)

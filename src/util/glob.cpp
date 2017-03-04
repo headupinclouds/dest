@@ -9,7 +9,12 @@
 */
 
 #include <dest/util/glob.h>
-#include <tinydir/tinydir.h>
+
+#if DEST_INTERNAL_TINYDIR
+#  include <tinydir/tinydir.h>
+#else
+#  include <tinydir.h>
+#endif
 #include <stack>
 #include <algorithm>
 
